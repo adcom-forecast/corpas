@@ -6,6 +6,7 @@
 <title>Dashboard Corpas — ADCOM</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
   --black:#0A0A0A;--white:#FFFFFF;--yellow:#FFC000;
@@ -133,6 +134,33 @@ th.sort-active{color:var(--black)!important}
 .loader-sub{font-size:12px;color:#555}
 .spinner{width:32px;height:32px;border:3px solid #222;border-top-color:var(--yellow);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+.charts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:1200px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--white);border-radius:var(--r-md);border:1px solid var(--gray-200);padding:16px 18px}
+.chart-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:12px}
+.chart-canvas{position:relative;height:180px}
+/* Programática */
+.prog-kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:1400px){.prog-kpi-grid{grid-template-columns:repeat(3,1fr)}}
+.prog-table-wrap{background:var(--white);border-radius:var(--r-md);border:1px solid var(--gray-200);overflow:hidden;margin-bottom:16px}
+.prog-table-header{padding:12px 18px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between}
+.preview-btn{background:var(--yellow);color:var(--black);border:none;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer}
+.preview-btn:hover{opacity:.8}
+/* Modal preview */
+#preview-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center}
+#preview-modal.open{display:flex}
+.preview-inner{background:var(--black);border-radius:var(--r-md);overflow:hidden;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;border:1px solid #333}
+.preview-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #222}
+.preview-name{font-size:12px;font-weight:700;color:var(--white)}
+.preview-close{background:none;border:none;color:#666;font-size:20px;cursor:pointer;line-height:1;padding:0 4px}
+.preview-close:hover{color:var(--white)}
+.preview-frame{width:700px;height:500px;border:none;background:#111}
+.type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase}
+.type-audio{background:#1DB954;color:#000}
+.type-banner{background:#6366F1;color:#fff}
+.type-video{background:#F59E0B;color:#000}
+
 </style>
 </head>
 <body>
@@ -161,6 +189,10 @@ th.sort-active{color:var(--black)!important}
     <div class="nav-item" id="nav-s2" onclick="navTo('s2',this)">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13h12M3 13V6m4 7V2m4 11V8"/></svg>
       Inversión Mes a Mes
+    </div>
+    <div class="nav-item" id="nav-s4" onclick="navTo('s4',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 4v3l2 2"/></svg>
+      Programática
     </div>
     <div class="nav-item" id="nav-s3" onclick="navTo('s3',this)">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 4h12M1 8h8M1 12h5"/></svg>
@@ -224,6 +256,22 @@ th.sort-active{color:var(--black)!important}
       <div class="section-title">Resumen General</div>
       <div class="kpi-grid" id="kpi-grid"></div>
 
+
+      <div class="section-title" style="margin-top:4px">Tendencia Diaria</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Inversión por día</div>
+          <div class="chart-canvas"><canvas id="chart-inv"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Leads CRM por día</div>
+          <div class="chart-canvas"><canvas id="chart-leads"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">CPL CRM por día</div>
+          <div class="chart-canvas"><canvas id="chart-cpl"></canvas></div>
+        </div>
+      </div>
       <div class="section-title" style="margin-top:4px">Por Modalidad vs Meta</div>
       <div class="kpi-grid" id="kpi-modal-grid" style="grid-template-columns:repeat(4,1fr)"></div>
 
@@ -250,6 +298,41 @@ th.sort-active{color:var(--black)!important}
       </div>
       <div id="prog-tables"></div>
     </div>
+
+    <!-- S4: PROGRAMÁTICA -->
+    <div class="section" id="s4">
+      <div class="section-title">Programática — Basis DSP</div>
+      <div class="prog-kpi-grid" id="prog-kpis"></div>
+
+      <div class="section-title" style="margin-top:4px">Por Campaña</div>
+      <div class="prog-table-wrap">
+        <div class="prog-table-header"><div class="table-title">Detalle por campaña</div></div>
+        <div class="table-scroll" id="prog-camp-table"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:4px">Por Tipo / Formato</div>
+      <div class="prog-table-wrap">
+        <div class="prog-table-header"><div class="table-title">DOOH vs Audio vs Banner</div></div>
+        <div class="table-scroll" id="prog-tipo-table"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:4px">Creativos</div>
+      <div class="prog-table-wrap">
+        <div class="prog-table-header"><div class="table-title">Detalle por creativo</div></div>
+        <div class="table-scroll" id="prog-crea-table"></div>
+      </div>
+    </div>
+
+    <!-- Modal Preview -->
+    <div id="preview-modal">
+      <div class="preview-inner">
+        <div class="preview-bar">
+          <span class="preview-name" id="preview-name">—</span>
+          <button class="preview-close" onclick="closePreview()">✕</button>
+        </div>
+        <iframe class="preview-frame" id="preview-frame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -261,13 +344,18 @@ const URL_METAS  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
 const URL_LEADS  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=393843393`;
 const URL_MAT    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=727807157`;
 
+// ── BASIS DSP ────────────────────────────────────────────────────────────────
+const BASIS_ID       = '1vZE-bg0BTrVv2Bn8OqjtH0whgv_XZVZz2KHfOzjz0Oo';
+const URL_BASIS_DATA = `https://docs.google.com/spreadsheets/d/${BASIS_ID}/gviz/tq?tqx=out:csv&gid=1846622423`;
+const URL_BASIS_CREA = `https://docs.google.com/spreadsheets/d/${BASIS_ID}/gviz/tq?tqx=out:csv&gid=2060159071`;
+
 // ── ESTRUCTURA DE COLUMNAS ───────────────────────────────────────────────────
 // RG:     [0]Date  [1]Campaign  [2]Total Cost  [3]Conversions  [4]Medio  [5]Programa  [6]Modalidad
 // METAS:  [0]Periodo  [1]Fecha Inicio  [2]Fecha fin  [3]Programa  [4]Modalidad  [5]Meta Leads  [6]Meta Matrículas  [7]%Conv  [8]Presupuesto
 // LEADS:  [22]Create Date  [24]Canal de Ingreso  [25]Cuenta Maestra  [29]Programa de interés
 // MAT:    [1]Created At  [2]Aspirante Matriculado  [8]Programa de interés  [10]Contacts.Canal de Ingreso
 
-let RAW_RG=[], RAW_METAS=[], RAW_LEADS=[], RAW_MAT=[];
+let RAW_RG=[], RAW_METAS=[], RAW_LEADS=[], RAW_MAT=[], RAW_BASIS_DATA=[], RAW_BASIS_CREA=[];
 const $=id=>document.getElementById(id);
 const MEDIOS=['facebook','google','tiktok','programatica'];
 const MEDIOS_LEADS=['facebook','google','tiktok','programatica'];
@@ -313,7 +401,7 @@ function refreshData(){
   showLoading(true);
   $('last-update').textContent='Cargando...';
   let done=0, rendered=false;
-  const TOTAL=4;
+  const TOTAL=6;
   const safety=setTimeout(()=>{ if(!rendered){ rendered=true; processAndRender(); showLoading(false); } },15000);
   const check=()=>{ if(++done===TOTAL){ clearTimeout(safety); if(!rendered){ rendered=true; processAndRender(); showLoading(false); } } };
 
@@ -353,6 +441,20 @@ function refreshData(){
       if(RAW_MAT.length && /id|created/i.test(String(RAW_MAT[0][0]))) RAW_MAT.shift();
       console.log('✅ MAT:',RAW_MAT.length); check(); },
     error:e=>{console.error('❌ MAT',e); check();}
+  });
+
+  Papa.parse(URL_BASIS_DATA,{download:true,header:false,skipEmptyLines:true,
+    complete:r=>{ RAW_BASIS_DATA=r.data;
+      if(RAW_BASIS_DATA.length && /date/i.test(String(RAW_BASIS_DATA[0][0]))) RAW_BASIS_DATA.shift();
+      console.log('✅ BASIS_DATA:',RAW_BASIS_DATA.length); check(); },
+    error:e=>{console.error('❌ BASIS_DATA',e); check();}
+  });
+
+  Papa.parse(URL_BASIS_CREA,{download:true,header:false,skipEmptyLines:true,
+    complete:r=>{ RAW_BASIS_CREA=r.data;
+      if(RAW_BASIS_CREA.length && /date/i.test(String(RAW_BASIS_CREA[0][0]))) RAW_BASIS_CREA.shift();
+      console.log('✅ BASIS_CREA:',RAW_BASIS_CREA.length); check(); },
+    error:e=>{console.error('❌ BASIS_CREA',e); check();}
   });
 }
 
@@ -500,6 +602,37 @@ function processAndRender(){
   renderMesTable();
   renderAllProgTables();
   revealSections();
+  // ── CHARTS ──────────────────────────────────────────────────────────────────
+  // Build daily data from RG
+  const dailyMap = {};
+  filtered.forEach(r => {
+    if(!r.fecha) return;
+    if(!dailyMap[r.fecha]) dailyMap[r.fecha] = {inv:0, leadsP:0};
+    dailyMap[r.fecha].inv    += r.inv;
+    dailyMap[r.fecha].leadsP += r.leadsP;
+  });
+  // Daily leads CRM from LEADS
+  const dailyLeadsCRM = {};
+  filtLeads.forEach(r => {
+    const f = parseFecha(r[22]).full;
+    if(!f) return;
+    if(!dailyLeadsCRM[f]) dailyLeadsCRM[f] = 0;
+    dailyLeadsCRM[f]++;
+  });
+  const allDays = [...new Set([...Object.keys(dailyMap), ...Object.keys(dailyLeadsCRM)])].sort();
+  const chartLabels = allDays.map(d => { const p=d.split('-'); return (p[2]||'')+'/'+(p[1]||''); });
+  const chartInv    = allDays.map(d => dailyMap[d]?.inv||0);
+  const chartLC     = allDays.map(d => dailyLeadsCRM[d]||0);
+  const chartCPL    = allDays.map(d => {
+    const inv = dailyMap[d]?.inv||0;
+    const lc  = dailyLeadsCRM[d]||0;
+    return lc ? Math.round(inv/lc) : 0;
+  });
+  renderCharts(chartLabels, chartInv, chartLC, chartCPL);
+
+  // ── PROGRAMÁTICA ─────────────────────────────────────────────────────────────
+  renderProgramatica();
+
 }
 
 // ── RENDER KPIs GLOBALES ──────────────────────────────────────────────────────
@@ -788,6 +921,241 @@ function renderAllProgTables(){
   }).join('');
 }
 
+
+// ── CHARTS ───────────────────────────────────────────────────────────────────
+let _charts = {};
+function renderCharts(labels, inv, leads, cpl){
+  const makeChart = (id, label, data, color, isCOP) => {
+    const ctx = document.getElementById(id);
+    if(!ctx) return;
+    if(_charts[id]) _charts[id].destroy();
+    _charts[id] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets:[{
+          label,
+          data,
+          backgroundColor: color+'33',
+          borderColor: color,
+          borderWidth: 2,
+          borderRadius: 3,
+          pointRadius: 2,
+          tension: 0.3,
+          type: labels.length > 60 ? 'line' : 'bar'
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{
+          callbacks:{ label: ctx => isCOP ? '$'+Math.round(ctx.raw).toLocaleString('es-CO') : Math.round(ctx.raw).toLocaleString('es-CO') }
+        }},
+        scales:{
+          x:{ ticks:{font:{size:9}, maxTicksLimit:10, color:'#aaa'}, grid:{display:false} },
+          y:{ ticks:{font:{size:9}, color:'#aaa',
+            callback: v => isCOP ? '$'+Math.round(v/1000)+'k' : v
+          }, grid:{color:'#f0f0f0'} }
+        }
+      }
+    });
+  };
+  makeChart('chart-inv',   'Inversión',   inv,  '#FFC000', true);
+  makeChart('chart-leads', 'Leads CRM',   leads,'#1877F2', false);
+  makeChart('chart-cpl',   'CPL CRM',     cpl,  '#7C3AED', true);
+}
+
+// ── PROGRAMÁTICA ─────────────────────────────────────────────────────────────
+// BASIS_DATA cols: [0]Date [1]Campaign [2]CampID [3]Group [4]GroupID [5]Brand [6]BrandID
+//                 [7]Imps [8]Clicks [9]CTR [10]Media Spend [11]Data Spend [12]Total Spend
+//                 [13]Total eCPM [14]Total eCPC [15]Adv.Spend [16]Adv.eCPM [17]Adv.eCPC [18]Conversions
+// BASIS_CREA cols: [0]Date [1]CreativeID [2]CreativeName [3]Size [4]Type [5]CampID [6]CampName
+//                 [7]GroupID [8]Imps [9]Clicks [10]CTR [11]Total Spend [12]Total eCPM [13]Total eCPC
+//                 [14]Adv.Spend [15]Adv.eCPM [16]Adv.eCPC [17]Conversions [18]PreviewURL [19]ClickURL
+
+function renderProgramatica(){
+  if(!RAW_BASIS_DATA.length && !RAW_BASIS_CREA.length){
+    $('prog-kpis').innerHTML='<div style="grid-column:1/-1;padding:24px;color:#aaa;text-align:center">Sin datos de programática</div>';
+    return;
+  }
+
+  // Totales de BASIS_DATA
+  let totImps=0, totClicks=0, totSpend=0, totConv=0;
+  const campMap = {};
+  RAW_BASIS_DATA.forEach(r=>{
+    const imps  = parseFloat(String(r[7]||'0').replace(',','.'))||0;
+    const clk   = parseFloat(String(r[8]||'0').replace(',','.'))||0;
+    const spend = parseFloat(String(r[15]||'0').replace(',','.'))||0;
+    const conv  = parseFloat(String(r[18]||'0').replace(',','.'))||0;
+    totImps  += imps;
+    totClicks+= clk;
+    totSpend += spend;
+    totConv  += conv;
+    const camp = String(r[1]||'').trim();
+    if(!campMap[camp]) campMap[camp]={imps:0,clk:0,spend:0,conv:0};
+    campMap[camp].imps  += imps;
+    campMap[camp].clk   += clk;
+    campMap[camp].spend += spend;
+    campMap[camp].conv  += conv;
+  });
+
+  const ctr  = totImps ? (totClicks/totImps*100) : 0;
+  const ecpm = totImps ? (totSpend/totImps*1000) : 0;
+  const ecpc = totClicks ? (totSpend/totClicks) : 0;
+
+  // KPI cards
+  const kpis = [
+    {label:'Inversión (Adv.)',  value:fmtCOP(totSpend)},
+    {label:'Impresiones',       value:totImps?totImps.toLocaleString('es-CO'):'—'},
+    {label:'Clics',             value:totClicks?totClicks.toLocaleString('es-CO'):'—'},
+    {label:'CTR',               value:ctr?ctr.toFixed(3)+'%':'—'},
+    {label:'eCPM',              value:fmtCOP(ecpm)},
+    {label:'eCPC',              value:fmtCOP(ecpc)},
+  ];
+  $('prog-kpis').innerHTML = kpis.map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value" style="font-size:16px">${k.value}</div>
+    </div>`).join('');
+
+  // Tabla por campaña
+  const campRows = Object.entries(campMap).sort((a,b)=>b[1].spend-a[1].spend);
+  const totCamp  = campRows.reduce((a,r)=>a+r[1].spend,0);
+  $('prog-camp-table').innerHTML=`<table>
+    <thead><tr>
+      <th>Campaña</th><th class="num">Inversión</th>
+      <th class="num">Imps.</th><th class="num">Clics</th>
+      <th class="num">CTR</th><th class="num">eCPM</th><th class="num">eCPC</th>
+    </tr></thead>
+    <tbody>
+    ${campRows.map(([camp,d])=>{
+      const ctr2 = d.imps?(d.clk/d.imps*100):0;
+      const ecpm2= d.imps?(d.spend/d.imps*1000):0;
+      const ecpc2= d.clk?(d.spend/d.clk):0;
+      return `<tr>
+        <td style="font-weight:600">${camp}</td>
+        <td class="num bold">${fmtCOP(d.spend)}</td>
+        <td class="num">${d.imps.toLocaleString('es-CO')}</td>
+        <td class="num">${d.clk.toLocaleString('es-CO')}</td>
+        <td class="num">${ctr2?ctr2.toFixed(3)+'%':'—'}</td>
+        <td class="num">${fmtCOP(ecpm2)}</td>
+        <td class="num">${fmtCOP(ecpc2)}</td>
+      </tr>`;
+    }).join('')}
+    <tr class="total-row">
+      <td>TOTAL</td>
+      <td class="num yellow">${fmtCOP(totCamp)}</td>
+      <td class="num yellow">${totImps.toLocaleString('es-CO')}</td>
+      <td class="num yellow">${totClicks.toLocaleString('es-CO')}</td>
+      <td class="num yellow">${ctr?ctr.toFixed(3)+'%':'—'}</td>
+      <td class="num yellow">${fmtCOP(ecpm)}</td>
+      <td class="num yellow">${fmtCOP(ecpc)}</td>
+    </tr>
+    </tbody>
+  </table>`;
+
+  // Tabla por tipo (de creatives)
+  const tipoMap = {};
+  RAW_BASIS_CREA.forEach(r=>{
+    const tipo  = String(r[4]||'banner').trim().toLowerCase();
+    const imps  = parseFloat(String(r[8]||'0').replace(',','.'))||0;
+    const clk   = parseFloat(String(r[9]||'0').replace(',','.'))||0;
+    const spend = parseFloat(String(r[14]||'0').replace(',','.'))||0;
+    if(!tipoMap[tipo]) tipoMap[tipo]={imps:0,clk:0,spend:0};
+    tipoMap[tipo].imps  += imps;
+    tipoMap[tipo].clk   += clk;
+    tipoMap[tipo].spend += spend;
+  });
+  const tipoRows = Object.entries(tipoMap).sort((a,b)=>b[1].spend-a[1].spend);
+  $('prog-tipo-table').innerHTML=`<table>
+    <thead><tr>
+      <th>Tipo</th><th class="num">Inversión</th>
+      <th class="num">Imps.</th><th class="num">Clics</th><th class="num">CTR</th>
+    </tr></thead>
+    <tbody>
+    ${tipoRows.map(([tipo,d])=>{
+      const ctr3=d.imps?(d.clk/d.imps*100):0;
+      const badge=tipo==='audio'?'type-audio':tipo==='video'?'type-video':'type-banner';
+      return `<tr>
+        <td><span class="type-badge ${badge}">${tipo}</span></td>
+        <td class="num bold">${fmtCOP(d.spend)}</td>
+        <td class="num">${d.imps.toLocaleString('es-CO')}</td>
+        <td class="num">${d.clk.toLocaleString('es-CO')}</td>
+        <td class="num">${ctr3?ctr3.toFixed(3)+'%':'—'}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+
+  // Tabla de creativos con Preview
+  // Deduplicar por creativo (agrupar por CreativeID)
+  const creaMap = {};
+  RAW_BASIS_CREA.forEach(r=>{
+    const id   = String(r[1]||'').trim();
+    const name = String(r[2]||'').trim();
+    const tipo = String(r[4]||'').trim().toLowerCase();
+    const camp = String(r[6]||'').trim();
+    const size = String(r[3]||'—').trim();
+    const imps = parseFloat(String(r[8]||'0').replace(',','.'))||0;
+    const clk  = parseFloat(String(r[9]||'0').replace(',','.'))||0;
+    const spend= parseFloat(String(r[14]||'0').replace(',','.'))||0;
+    const prev = String(r[18]||'').trim();
+    const url  = String(r[19]||'').trim();
+    if(!creaMap[id]) creaMap[id]={id,name,tipo,camp,size,imps:0,clk:0,spend:0,prev,url};
+    creaMap[id].imps  += imps;
+    creaMap[id].clk   += clk;
+    creaMap[id].spend += spend;
+  });
+  const creaRows = Object.values(creaMap).sort((a,b)=>b.spend-a.spend);
+  const previewsJSON = JSON.stringify(creaRows.reduce((acc,r)=>{ acc[r.id]={name:r.name,url:r.prev}; return acc; },{}));
+
+  $('prog-crea-table').innerHTML=`<table>
+    <thead><tr>
+      <th>Creativo</th><th>Tipo</th><th>Campaña</th><th>Tamaño</th>
+      <th class="num">Inversión</th><th class="num">Imps.</th>
+      <th class="num">Clics</th><th class="num">CTR</th><th>Preview</th>
+    </tr></thead>
+    <tbody>
+    ${creaRows.map(r=>{
+      const ctr4=r.imps?(r.clk/r.imps*100):0;
+      const badge=r.tipo==='audio'?'type-audio':r.tipo==='video'?'type-video':'type-banner';
+      const prevBtn = r.prev
+        ? `<button class="preview-btn" onclick="openPreview('${r.id}')">▶ Ver</button>`
+        : '—';
+      return `<tr>
+        <td style="font-weight:600;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.name}">${r.name}</td>
+        <td><span class="type-badge ${badge}">${r.tipo}</span></td>
+        <td style="font-size:11px;color:#666;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.camp}</td>
+        <td style="font-size:11px">${r.size}</td>
+        <td class="num bold">${fmtCOP(r.spend)}</td>
+        <td class="num">${r.imps.toLocaleString('es-CO')}</td>
+        <td class="num">${r.clk.toLocaleString('es-CO')}</td>
+        <td class="num">${ctr4?ctr4.toFixed(3)+'%':'—'}</td>
+        <td>${prevBtn}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+
+  // Store previews globally for modal
+  window._previews = JSON.parse(previewsJSON);
+}
+
+function openPreview(id){
+  const p = window._previews?.[id];
+  if(!p) return;
+  $('preview-name').textContent = p.name;
+  $('preview-frame').src = p.url;
+  $('preview-modal').classList.add('open');
+}
+function closePreview(){
+  $('preview-modal').classList.remove('open');
+  $('preview-frame').src = 'about:blank';
+}
+// Close on backdrop click
+document.addEventListener('click', e=>{
+  if(e.target.id==='preview-modal') closePreview();
+});
+
 // ── UTILIDADES ────────────────────────────────────────────────────────────────
 function applyFilters(){ processAndRender(); }
 function resetFilters(){
@@ -806,7 +1174,7 @@ function navTo(id,el){
 }
 
 window.addEventListener('scroll',()=>{
-  const ids=['s1','s2','s3']; const th=document.querySelector('.topbar')?.offsetHeight||100;
+  const ids=['s1','s2','s3','s4']; const th=document.querySelector('.topbar')?.offsetHeight||100;
   let cur='s1';
   ids.forEach(id=>{ const el=document.getElementById(id); if(el&&el.getBoundingClientRect().top<=th+50) cur=id; });
   ids.forEach(id=>{ document.getElementById('nav-'+id)?.classList.toggle('active',id===cur); });
