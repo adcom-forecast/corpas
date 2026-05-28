@@ -318,9 +318,19 @@ function refreshData(){
   const check=()=>{ if(++done===TOTAL){ clearTimeout(safety); if(!rendered){ rendered=true; processAndRender(); showLoading(false); } } };
 
   Papa.parse(URL_RG,{download:true,header:false,skipEmptyLines:true,
-    complete:r=>{ RAW_RG=r.data;
-      if(RAW_RG.length && /date|fecha|camp/i.test(String(RAW_RG[0][0]))) RAW_RG.shift();
-      console.log('✅ RG:',RAW_RG.length,'| muestra:',RAW_RG[0]); check(); },
+    complete:r=>{
+      let data=r.data;
+      // Saltar filas de metadatos PMA hasta llegar a una fecha real
+      while(data.length && !String(data[0][0]).match(/^\d{1,4}[\/\-]\d/)){
+        console.log('⏩ Skip metadata:',data[0][0]);
+        data.shift();
+      }
+      // Saltar header si lo hay
+      if(data.length && /date|fecha|camp/i.test(String(data[0][0]))) data.shift();
+      RAW_RG=data;
+      console.log('✅ RG:',RAW_RG.length,'| muestra:',RAW_RG[0]);
+      check();
+    },
     error:e=>{console.error('❌ RG',e); check();}
   });
 
