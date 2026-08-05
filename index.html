@@ -163,6 +163,41 @@
     font-weight: 300;
     line-height: 1.5;
   }
+  .card-group {
+    cursor: default;
+  }
+  .route-links {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .route-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    color: #1A1A1A;
+    background: #F7F7F7;
+    border: 1px solid #EBEBEB;
+    border-radius: 9px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .route-link:hover {
+    background: #FFF9E6;
+    border-color: #FFC000;
+  }
+  .route-link span:last-child {
+    color: #999;
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+  .route-link:hover span:last-child {
+    color: #FFC000;
+    transform: translateX(2px);
+  }
 
   /* ── INSIGHT BAR ── */
   .insight {
@@ -245,19 +280,29 @@
     <div class="card-desc">Anuncios por plataforma</div>
   </a>
 
-  <!-- CARD 3 -->
-  <a class="card" href="https://adcom-forecast.github.io/corpas/ruta-estrategica" target="_blank">
+  <!-- CARD 3: RUTAS ESTRATEGICAS -->
+  <div class="card card-group">
     <div class="card-top">
       <div class="card-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="#FFC000" stroke-width="2" stroke-linecap="round">
           <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-10l6-3m0 13l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 10m0 10V10"/>
         </svg>
       </div>
-      <span class="card-arrow">↗</span>
     </div>
-    <div class="card-title">Ruta Estratégica</div>
-    <div class="card-desc">Camino estratégico de medios</div>
-  </a>
+    <div class="card-title">Rutas estrat&eacute;gicas</div>
+    <div class="card-desc">Diagn&oacute;sticos y caminos estrat&eacute;gicos por periodo</div>
+    <div class="route-links">
+      <a class="route-link" href="https://adcom-forecast.github.io/corpas/ruta-corpas-20261" target="_blank" rel="noopener noreferrer">
+        <span>Ruta 2026-1</span><span>&#8599;</span>
+      </a>
+      <a class="route-link" href="https://adcom-forecast.github.io/corpas/ruta-estrategica" target="_blank" rel="noopener noreferrer">
+        <span>Ruta 2026-2</span><span>&#8599;</span>
+      </a>
+      <a class="route-link" href="https://adcom-forecast.github.io/corpas/ruta-estrategica-20271" target="_blank" rel="noopener noreferrer">
+        <span>Ruta 2027-1</span><span>&#8599;</span>
+      </a>
+    </div>
+  </div>
 
   <!-- CARD 4 -->
   <a class="card" href="https://docs.google.com/spreadsheets/d/1B9rms3VL1o3INwbeCd3EO8QOmUrQVf-kMi6ac50YV6E/edit" target="_blank" rel="noopener noreferrer">
@@ -285,6 +330,20 @@
     </div>
     <div class="card-title">Seguimiento Semanal</div>
     <div class="card-desc">Seguimiento inversión + CRM semanal</div>
+  </a>
+
+  <!-- CARD 6 -->
+  <a class="card" href="https://adcom-forecast.github.io/corpas/reportes-corpas" target="_blank" rel="noopener noreferrer">
+    <div class="card-top">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFC000" stroke-width="2" stroke-linecap="round">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+        </svg>
+      </div>
+      <span class="card-arrow">&#8599;</span>
+    </div>
+    <div class="card-title">Reporte DOOH</div>
+    <div class="card-desc">Reporte general de campa&ntilde;as DOOH</div>
   </a>
  
   <!-- ════ AGREGA MÁS CARDS AQUÍ ════
